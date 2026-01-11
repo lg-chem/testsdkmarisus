@@ -108,13 +108,17 @@ export async function chat(
   let ragSources: { filename: string; content: string }[] = [];
 
   if (useRAG) {
-    const searchResults = await searchDocuments(userMessage, 3, 0.6);
-    if (searchResults.length > 0) {
-      ragContext = buildContext(searchResults);
-      ragSources = searchResults.map((r) => ({
-        filename: r.filename,
-        content: r.content.slice(0, 200) + "...",
-      }));
+    try {
+      const searchResults = await searchDocuments(userMessage, 3, 0.6);
+      if (searchResults.length > 0) {
+        ragContext = buildContext(searchResults);
+        ragSources = searchResults.map((r) => ({
+          filename: r.filename,
+          content: r.content.slice(0, 200) + "...",
+        }));
+      }
+    } catch (e) {
+      console.warn("RAG search failed (tables may not exist yet):", e);
     }
   }
 
@@ -128,10 +132,10 @@ export async function chat(
   // Save user message
   await saveMessage(convId, "user", userMessage);
 
-  // Build messages for API
+  // Build messages for API - map assistant to model for Gemini
   const apiMessages = [
     ...history.map((m) => ({
-      role: m.role as "user" | "model",
+      role: (m.role === "assistant" ? "model" : "user") as "user" | "model",
       parts: [{ text: m.content }],
     })),
     { role: "user" as const, parts: [{ text: userMessage }] },
