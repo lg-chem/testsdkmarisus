@@ -51,7 +51,7 @@ if (shouldTryVertexAI) {
 }
 
 export const genai = genaiInstance;
-export const MODEL_NAME = "gemini-2.0-flash";
+export const MODEL_NAME = "gemini-2.0-flash-001";
 
 // Export config for other modules
 export const vertexConfig = {
