@@ -1,8 +1,9 @@
 import { db, documents, documentChunks } from "@/db";
 import { eq } from "drizzle-orm";
 import { generateEmbedding, splitIntoChunks } from "./embeddings";
-import { PDFParse } from "pdf-parse";
 import * as cheerio from "cheerio";
+
+// Note: pdf-parse is imported dynamically to avoid DOMMatrix error on server
 
 export type DocumentType = "pdf" | "txt" | "url";
 
@@ -15,6 +16,8 @@ interface ProcessedDocument {
  * Extract text from PDF buffer
  */
 async function extractPdfText(buffer: Buffer): Promise<string> {
+  // Dynamic import to avoid DOMMatrix error at module load time
+  const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
   const textResult = await parser.getText();
   return textResult.text;
