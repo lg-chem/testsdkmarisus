@@ -148,19 +148,36 @@ export async function chat(
   }
 
   // Generate response
-  const response = await genai.models.generateContent({
-    model: MODEL_NAME,
-    contents: apiMessages,
-    config: {
-      systemInstruction: systemPrompt,
-      temperature: 0.7,
-      maxOutputTokens: 2048,
-      tools: tools.length > 0 ? tools : undefined,
-    },
-  });
+  let assistantContent: string;
+  try {
+    const response = await genai.models.generateContent({
+      model: MODEL_NAME,
+      contents: apiMessages,
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+        tools: tools.length > 0 ? tools : undefined,
+      },
+    });
+    assistantContent =
+      response.text || "Przepraszam, nie udało się wygenerować odpowiedzi.";
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    console.error("Gemini generateContent error:", errorMessage);
 
-  const assistantContent =
-    response.text || "Przepraszam, nie udało się wygenerować odpowiedzi.";
+    // Provide helpful error message
+    if (errorMessage.includes("not found") || errorMessage.includes("404")) {
+      throw new Error(`Model ${MODEL_NAME} nie został znaleziony. Sprawdź konfigurację GEMINI_MODEL.`);
+    }
+    if (errorMessage.includes("permission") || errorMessage.includes("403")) {
+      throw new Error("Brak uprawnień do API. Sprawdź konfigurację service account.");
+    }
+    if (errorMessage.includes("quota") || errorMessage.includes("429")) {
+      throw new Error("Przekroczono limit zapytań API. Spróbuj ponownie za chwilę.");
+    }
+    throw new Error(`Błąd generowania odpowiedzi: ${errorMessage}`);
+  }
 
   // Save assistant message
   await saveMessage(convId, "assistant", assistantContent, {

@@ -70,8 +70,15 @@ export async function GET() {
 
   // 4. Test Gemini initialization
   try {
-    const { genai, vertexConfig } = await import("@/services/agents/gemini-client");
-    debug.geminiInit = { status: "OK", isVertexAI: vertexConfig.isVertexAI, error: null };
+    const { genai, vertexConfig, MODEL_NAME } = await import("@/services/agents/gemini-client");
+    debug.geminiInit = {
+      status: vertexConfig.initError ? "INIT_ERROR" : "OK",
+      isVertexAI: vertexConfig.isVertexAI,
+      model: MODEL_NAME,
+      project: vertexConfig.project,
+      location: vertexConfig.location,
+      error: vertexConfig.initError || null,
+    };
   } catch (e) {
     debug.geminiInit = { status: "ERROR", isVertexAI: false, error: e instanceof Error ? e.message : String(e) };
   }

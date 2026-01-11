@@ -10,11 +10,24 @@ const shouldTryVertexAI = Boolean(projectId && serviceAccountKey);
 
 let genaiInstance: GoogleGenAI;
 let isVertexAI = false;
+let initError: string | null = null;
 
 if (shouldTryVertexAI) {
   // Parse service account JSON from env variable
   try {
     const credentials = JSON.parse(serviceAccountKey!);
+
+    // Validate required fields
+    const requiredFields = ["type", "project_id", "private_key", "client_email"];
+    const missingFields = requiredFields.filter((f) => !credentials[f]);
+    if (missingFields.length > 0) {
+      throw new Error(`Service account missing fields: ${missingFields.join(", ")}`);
+    }
+
+    // Fix newlines in private_key if needed (common issue with env vars)
+    if (credentials.private_key && !credentials.private_key.includes("\n")) {
+      credentials.private_key = credentials.private_key.replace(/\\n/g, "\n");
+    }
 
     // Initialize with Vertex AI
     genaiInstance = new GoogleGenAI({
@@ -28,7 +41,8 @@ if (shouldTryVertexAI) {
     isVertexAI = true;
     console.log(`Vertex AI initialized: project=${projectId}, location=${location}`);
   } catch (e) {
-    console.error("Failed to init Vertex AI:", e);
+    initError = e instanceof Error ? e.message : String(e);
+    console.error("Failed to init Vertex AI:", initError);
     console.error("Falling back to Gemini API...");
 
     // Fallback to Gemini API
@@ -47,15 +61,16 @@ if (shouldTryVertexAI) {
   }
 
   genaiInstance = new GoogleGenAI({ apiKey: apiKey || "" });
-  console.log("Gemini API initialized");
+  console.log("Gemini API initialized (API key mode)");
 }
 
 export const genai = genaiInstance;
-export const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+export const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-2.0-flash-001";
 
 // Export config for other modules
 export const vertexConfig = {
   isVertexAI,
   project: projectId,
   location: location,
+  initError,
 };
