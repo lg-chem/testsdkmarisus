@@ -89,5 +89,31 @@ export async function GET() {
     debug.geminiCall = { status: "ERROR", error: e instanceof Error ? e.message : String(e) };
   }
 
+  // 6. Test embedding generation (used by RAG)
+  const embeddingTest: { status: string; error: string | null; dimensions?: number } = { status: "pending", error: null };
+  try {
+    const { generateEmbedding } = await import("@/services/rag/embeddings");
+    const embedding = await generateEmbedding("test query");
+    embeddingTest.status = "OK";
+    embeddingTest.dimensions = embedding.length;
+  } catch (e) {
+    embeddingTest.status = "ERROR";
+    embeddingTest.error = e instanceof Error ? e.message : String(e);
+  }
+  (debug as Record<string, unknown>).embeddingTest = embeddingTest;
+
+  // 7. Test listConversations (exact function used by chat API)
+  const chatServiceTest: { status: string; error: string | null; count?: number } = { status: "pending", error: null };
+  try {
+    const { listConversations } = await import("@/services/chat");
+    const convs = await listConversations();
+    chatServiceTest.status = "OK";
+    chatServiceTest.count = convs.length;
+  } catch (e) {
+    chatServiceTest.status = "ERROR";
+    chatServiceTest.error = e instanceof Error ? e.message : String(e);
+  }
+  (debug as Record<string, unknown>).chatServiceTest = chatServiceTest;
+
   return NextResponse.json(debug);
 }
