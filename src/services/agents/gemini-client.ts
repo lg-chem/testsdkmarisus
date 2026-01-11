@@ -15,8 +15,11 @@ if (useVertexAI) {
   let credentials;
   try {
     credentials = JSON.parse(serviceAccountKey!);
-  } catch {
-    console.error("Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY JSON");
+  } catch (e) {
+    console.error("Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY JSON:", e);
+    console.error("Key length:", serviceAccountKey?.length);
+    console.error("Key preview:", serviceAccountKey?.substring(0, 50) + "...");
+    throw new Error("Invalid GOOGLE_SERVICE_ACCOUNT_KEY JSON format");
   }
 
   // Initialize with Vertex AI
