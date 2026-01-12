@@ -13,7 +13,8 @@ export const dynamic = "force-dynamic";
 
 const chatSchema = z.object({
   message: z.string().min(1, "Message is required"),
-  conversationId: z.string().uuid().optional(),
+  // Accept null from frontend and convert to undefined
+  conversationId: z.string().uuid().optional().nullable().transform(v => v ?? undefined),
   useGrounding: z.boolean().optional().default(true),
   useRAG: z.boolean().optional().default(true),
 });
