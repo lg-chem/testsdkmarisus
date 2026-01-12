@@ -67,9 +67,10 @@ export async function GET(request: NextRequest) {
     const convs = await listConversations();
     return NextResponse.json({ success: true, conversations: convs });
   } catch (error) {
-    console.error("Get conversations error:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Get conversations error:", errorMsg);
     return NextResponse.json(
-      { success: false, error: "Failed to get conversations" },
+      { success: false, error: errorMsg },
       { status: 500 }
     );
   }
