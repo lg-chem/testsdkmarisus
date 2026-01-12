@@ -2,7 +2,12 @@ import { neon, NeonQueryFunction } from "@neondatabase/serverless";
 import { drizzle, NeonHttpDatabase } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+// Prefer unpooled for Neon (pooler can cause issues with some queries)
+const connectionString =
+  process.env.DATABASE_URL_UNPOOLED ||
+  process.env.POSTGRES_URL_UNPOOLED ||
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL;
 
 // Lazy initialization to prevent crash on missing env vars
 let _db: NeonHttpDatabase<typeof schema> | null = null;
