@@ -124,3 +124,22 @@ export async function GET() {
 
   return NextResponse.json(debug);
 }
+
+// Test POST chat directly
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { chat } = await import("@/services/chat");
+
+    const response = await chat(body.message || "test", {
+      useGrounding: false,
+      useRAG: false,
+    });
+
+    return NextResponse.json({ success: true, response });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    return NextResponse.json({ success: false, error: msg, stack }, { status: 500 });
+  }
+}
